@@ -46,9 +46,8 @@ stack<T> :: stack(){
 
 template <typename T>
 stack<T> :: stack(int n){
-    n = cap;
-    arr = new T[n];
     _size = n;
+    arr = new T[_size];
     stackTop = -1;
 }
 
