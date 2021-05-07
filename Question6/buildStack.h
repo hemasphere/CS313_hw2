@@ -43,16 +43,15 @@ private:
 
 template <typename T>
 stack<T> :: stack(){
-    arr = new T[_size];
     _size = cap;
+    arr = new T[cap];
     stackTop = -1;
 }
 
 template <typename T>
 stack<T> :: stack(int n){
-    n = cap;
-    arr = new T[n];
     _size = n;
+    arr = new T[_size];
     stackTop = -1;
 }
 
