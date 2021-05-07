@@ -19,7 +19,7 @@ double prefixStack(std:: string str){
         if(isdigit(str[i]))
             newStack.push(str[i]-'0');
         else{
-            //instantiating two double variables, o1 and o2
+            //instantiating two double variables, op1 and op2
             double op1 = newStack.top();
             newStack.pop();
             double op2 = newStack.top();
