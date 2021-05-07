@@ -1,0 +1,288 @@
+//importing statements
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include "mystack.h"
+
+//importing namespace
+using namespace std;
+
+//void function evaluateExpression that takes in:
+//ifstream& inpF, ofstream& outF,stackType<double>& stack, and char& ch, bool& isExpOk
+void evaluateExpression(ifstream& inpF, ofstream& outF,
+                        stackType<double>& stack,
+                        char& ch, bool& isExpOk);
+
+//void function evaluateOpr that takes in:
+// ofstream& out, stackType<double>& stack, char& ch, and bool& isExpOk
+void evaluateOpr(ofstream& out, stackType<double>& stack,
+                 char& ch, bool& isExpOk);
+
+//void function discardExp that takes in:
+//ifstream& in, ofstream& out, and char& ch
+void discardExp(ifstream& in, ofstream& out, char& ch);
+
+//void function printResult that takes in:
+//ofstream& outF, stackType<double>& stack, and isExpOk
+void printResult(ofstream& outF, stackType<double>& stack,
+                 bool isExpOk);
+
+//the main program
+int main()
+{
+    //instantiating variables
+    bool expressionOk;
+    char ch;
+    stackType<double> stack(100);
+    ifstream infile;
+    ofstream outfile;
+
+    //opens txt file name "RpnData.txt"
+    infile.open("RpnData.txt");
+
+    //if we can't open the file
+    if (!infile)
+    {
+        //print out "Cannot open the input file. " and "Program terminates!"
+        cout << "Cannot open the input file. "
+             << "Program terminates!" << endl;
+        return 1;
+    }
+
+    //opens txt file name "RpnData.txt"
+    outfile.open("RpnOutput.txt");
+
+    //this is fixed in the decimal format
+    //showpoint will force an output if there is no decimal point
+    outfile << fixed << showpoint;
+    //setprecision is set to 2 decimal places
+    outfile << setprecision(2);
+
+    //reads chars
+    infile >> ch;
+    //while infile is open
+    while (infile)
+    {
+        //stack calls initializeStack()
+        stack.initializeStack();
+        //sets expression to true
+        expressionOk = true;
+        //outputs file
+        outfile << ch;
+
+        //calls evaluateExpression() with arguments of:
+        //infile, outfile, stack, ch, and expressionOk
+        evaluateExpression(infile, outfile, stack, ch,
+                           expressionOk);
+        //prints the results
+        printResult(outfile, stack, expressionOk);
+        infile >> ch; //begin processing the next expression
+    } //end while
+
+    //close both infile and outfile
+    infile.close();
+    outfile.close();
+
+    return 0;
+
+} //end main
+
+//function evaluateExpression
+void evaluateExpression(ifstream& inpF, ofstream& outF, stackType<double>& stack,char& ch, bool& isExpOk)
+{
+    //instantiates double num
+    double num;
+
+    //while char doesn't equal the equal sign
+    while (ch != '=')
+    {
+        //we check to see what ch is equal to
+        switch (ch)
+        {
+        //if it's equal to the pound sign
+        case '#':
+            //we take it in
+            inpF >> num;
+            //output num
+            outF << num << " ";
+            //if stack is not full
+            if (!stack.isFullStack())
+                //push (insert) num
+                stack.push(num);
+            //else statement
+            else
+            {
+                //output "Stack overflow. " and "Program terminates!"
+                cout << "Stack overflow. "
+                     << "Program terminates!" << endl;
+                exit(0);  //terminate the program
+            }
+            //break in loop
+            break;
+        //defaults this to the function
+        default:
+        //call function evaluateOpr
+            evaluateOpr(outF, stack, ch, isExpOk);
+        }//end switch
+
+        if (isExpOk) //if no error
+        {
+            //take in ch
+            inpF >> ch;
+            //output ch
+            outF << ch;
+            //if ch is not equal to pound sign
+            if (ch != '#')
+                //output a space
+                outF << " ";
+        }
+        //else
+        else
+            //call discardExp function
+            discardExp(inpF, outF, ch);
+    } //end while (!= '=')
+} //end evaluateExpression
+
+//function evaluateOpr
+void evaluateOpr(ofstream& out, stackType<double>& stack,
+              char& ch, bool& isExpOk)
+{
+    //instantiates double for two variables
+    double op1, op2;
+
+    //checks if stack is empty
+    if (stack.isEmptyStack())
+    {
+        //if not, print out "(Not enough operands)"
+        out << " (Not enough operands)";
+        //change isExpOk to false since there isn't enough operators
+        isExpOk = false;
+    }
+
+    //else statement
+    else
+    {
+        //op2 is equal to last element in stack (or the top)
+        op2 = stack.top();
+        //pop (delete) element
+        stack.pop();
+
+        //checks if stack is empty
+        if (stack.isEmptyStack())
+        {
+            //if not, print out "(Not enough operands)"
+            out << " (Not enough operands)";
+            //change isExpOk to false since there isn't enough operators
+            isExpOk = false;
+        }
+
+        //else statement
+        else
+        {
+            //op1 is equal to last element in stack (or the top)
+            op1 = stack.top();
+            //pop (delete) element
+            stack.pop();
+
+            //we check to see what ch is equal to
+            switch (ch)
+            {
+            //if ch is equal to plus sign
+            case '+':
+                //push (insert) the sum of op1 and op2
+                stack.push(op1 + op2);
+                //break loop
+                break;
+            //if ch is equal to minus sign
+            case '-':
+                //push (insert) the difference of op1 and op2
+                stack.push(op1 - op2);
+                //break loop
+                break;
+            //if ch is equal to asterisk
+            case '*':
+                //push (insert) the product of op1 and op2
+                stack.push(op1 * op2);
+                //break loop
+                break;
+            //if ch is equal to  backslash
+            case '/':
+                //checks to see is op2 is not 0
+                if (op2 != 0)
+                    //if not 0
+                    //push (insert) the quotient of op1 and op2
+                    stack.push(op1 / op2);
+                //if it is equal to 0
+                else
+                {
+                    //output " (Division by 0)"
+                    out << " (Division by 0)";
+                    //change isExpOk to false
+                    isExpOk = false;
+                }
+                //break from loop
+                break;
+            //default
+            default:
+                //output " (Illegal operator)"
+                out << " (Illegal operator)";
+                //change isExpOk to false
+                isExpOk = false;
+            }//end switch
+        } //end else
+    } //end else
+} //end evaluateOpr
+
+//function discardExp
+void discardExp(ifstream& in, ofstream& out, char& ch)
+{
+    //while chr is not equal to the equal sign
+    while (ch != '=')
+    {
+        //get the char
+        in.get(ch);
+        //output it
+        out << ch;
+    }
+} //end discardExp
+
+//function printResult
+void printResult(ofstream& outF, stackType<double>& stack,
+                 bool isExpOk)
+{
+    //instantiate double
+    double result;
+
+    if (isExpOk) //if no error, print the result
+    {
+        //if stack is not empty
+        if (!stack.isEmptyStack())
+        {
+            //result is equal to top of stack (or last element)
+            result = stack.top();
+            //pop (delete) element
+            stack.pop();
+
+            //if stack is empty
+            if (stack.isEmptyStack())
+                //output result
+                outF << result << endl;
+            //else statement
+            else
+                //output " (Error: Too many operands)"
+                outF << " (Error: Too many operands)" << endl;
+        } //end if
+        //else statement
+        else
+            //output " (Error in the expression)"
+            outF << " (Error in the expression)" << endl;
+    }
+    //else statement
+    else
+        //output " (Error in the expression)"
+        outF << " (Error in the expression)" << endl;
+
+    //output "_________________________________" and two endl (endline twice)
+    outF << "_________________________________"
+         << endl << endl;
+} //end printResult
